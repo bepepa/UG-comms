@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from utils import byte_to_bits, bits_to_byte
+from comms.utils import byte_to_bits, bits_to_byte
 
 def string_source(string):
     """convert a string to a vector of bits
@@ -57,6 +57,7 @@ def string_sink(bits):
     return bytes.tobytes().decode("utf-8", "replace")
 
 if __name__ == "__main__":
+
     ## Round-trip test
     string = "Hi 😲"
     assert string == string_sink( string_source(string) )

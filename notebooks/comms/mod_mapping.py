@@ -6,7 +6,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils import int_to_bits, bits_to_int
+from comms.utils import int_to_bits, bits_to_int
 
 #
 # Constellations
