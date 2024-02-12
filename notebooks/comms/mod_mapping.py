@@ -180,7 +180,7 @@ def plot_constellation(mod_table):
 
     plt.grid()
 
-    plt.show()
+    # plt.show()
 
 
 if __name__ == "__main__":
