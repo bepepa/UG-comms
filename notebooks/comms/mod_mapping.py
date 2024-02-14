@@ -3,6 +3,36 @@
 # File: mod_mapping.py - sources and sinks; 
 #       mapping groups of bits to symbols; includes several constellations
 
+"""
+# Modulation Mapping
+
+This module provides tables (dicts) for mapping groups of bits to symbols and functions to perform this mapping.
+Additionally, there are some functions to pretty-print or plot a constellation.
+
+## Constellations:
+
+The following constellations are provided:
+* BPSK (`BPSK`)
+* QPSK (`QPSK`)
+* 16-QAM (`QAM16`)
+* 64-QAM (`QAM64`)
+* 4-PAM (`PAM4`)
+* 8-PAM (`PAM8`)
+* 8-PSK (`PSK8`)
+
+## Modulation and Demodulation
+
+The following functions are used to modulate bits to symbols and vice versa
+
+* `mod_mapper( bits )`: map a sequence of bits to a sequence of symbols
+* `demodulator( rx_symbols )`: Recover bit sequence from received symbols
+
+## Helpers:
+
+* `print_constellation(mod_table)`: print a table of bit patterns and symbols
+* `plot_constellation(mod_table)`: plot the constellation
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -79,7 +109,7 @@ def mod_mapper(bits, mod_table):
     return syms
 
 def demodulator(syms, mod_table):
-    """Recover bit sequence from reeived symbols
+    """Recover bit sequence from received symbols
     
     Inputs:
     -------

@@ -3,6 +3,21 @@
 # File: sources.py - sources and sinks; 
 #       various ways to produce or consume sequences of bits
 
+"""
+# Sources and Sinks
+
+This module contains various functions that act as sources or sinks for bit sequences
+
+## Sources:
+
+* `string_source( string )`: convert a string to a sequence of bits
+
+## Sinks:
+
+* `string_sink( bits )`: convert a sequence of bits into a string
+
+"""
+
 import numpy as np
 
 from comms.utils import byte_to_bits, bits_to_byte
