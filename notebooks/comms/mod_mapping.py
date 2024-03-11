@@ -212,6 +212,49 @@ def plot_constellation(mod_table):
 
     # plt.show()
 
+def num_bits_per_symbol(mod_table):
+    """Compute number of bits per symbol
+    
+    Inputs:
+    -------
+    * mod_table: dictionary associating bits and symbols
+
+    Returns:
+    --------
+    (int)
+    """
+    return int( np.log2(len(mod_table)))
+
+def energy_per_symbol(mod_table):
+    """compute average energy per symbol
+    
+    Inputs:
+    -------
+    * mod_table: dictionary associating bits and symbols
+
+    Returns:
+    --------
+    (float)
+    """
+    Es = 0
+    for v in mod_table.values():
+        Es += np.abs(v)**2
+    
+    return Es/len(mod_table)
+
+def energy_per_bit(mod_table):
+    """compute average energy per bit
+    
+    Inputs:
+    -------
+    * mod_table: dictionary associating bits and symbols
+
+    Returns:
+    --------
+    (float)
+    """
+    return energy_per_symbol(mod_table) / num_bits_per_symbol(mod_table)
+
 
 if __name__ == "__main__":
     N = 988
