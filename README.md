@@ -28,3 +28,7 @@ To access the notebook that we used in class:
 * [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/040_Nyquist_pulse.ipynb#/); use the space bar to flip through the slides, or
 * [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/040_Nyquist_pulse.ipynb).
 
+5. **Baseband and Passband Signal:**</br>
+To access the notebook that we used in class:
+* [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/050_passband.ipynb#/); use the space bar to flip through the slides, or
+* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/050_passband.ipynb).

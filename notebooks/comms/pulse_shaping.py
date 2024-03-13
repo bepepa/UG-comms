@@ -14,6 +14,8 @@ of digitally modulated signals
 * `sine_squared_pulse`: generate sine-squared pulse $p(t) = A \sin^2(\pi t/T)$ for $0 \leq t < T$
 * `rect_pulse`: generate rectangular pulse $p(t) = A$ for $0 \leq t < T$
 * `half_sine_pulse`: generate half-sine pulse $p(t) = A \sin(\pi t/T)$ for $0 \leq t < T$
+* `rc_pulse`: generate a raised cosine pulse
+* `srrc_pulse`: generate a square-root raised cosine pulse
 
 ## Pulse shaping
 
@@ -89,6 +91,76 @@ def half_sine_pulse(fsT, fs=1):
 
     return pp
 
+def rc_pulse(a, fsT, fs=1, N=5):
+    """Construct a raised cosine pulse
+    
+    Inputs:
+    -------
+    a: roll-off factor
+    fsT: number of samples per symbol period
+    fs: sample rate (default: 1)
+    N: lenght of pulse in symbol periods; pulse ranges for -N \leq t/T \leq N (default: 5).
+
+    Returns:
+    --------
+    Length 2*N*fsT+1 vector
+    """
+    # time axis with spacing 1/(fs*T)
+    tt = np.linspace(-N, N, 2*N*fsT + 1)
+
+    if a == 0:
+        return np.sinc(tt)
+    
+    if np.min(np.abs(tt - 1/(2*a))) > 1e-6:
+        # fast if there is no divide by zero
+        return np.sinc(tt) * np.cos(np.pi*a*tt)/(1-(2*a*tt)**2)
+    else:
+        # deal with the case when 1-(2*a*tt)**2 = 0
+        ss = np.sinc(tt)
+        ind_0 = np.where(np.abs(np.abs(tt) - 1/(2*a)) < 1e-6)
+        tt[ind_0] = 0
+        bb = np.cos(np.pi*a*tt)/(1-(2*a*tt)**2)
+        bb[ind_0] = np.pi/4
+
+        return ss * bb
+
+def srrc_pulse(a, fsT, fs=1, N=5):
+    """Construct a raised cosine pulse
+    
+    Inputs:
+    a: roll-off factor
+    fsT: number of samples per symbol period
+    fs: sampling rate (default: 1)
+    N: lenght of pulse in symbol periods; pulse ranges for -N \leq t/T \leq N (default: 5).
+
+    Returns:
+    Length 2*N*fsT+1 vector
+    """
+    # time axis with spacing 1/fs
+    tt = np.linspace(-N, N, 2*N*fsT + 1)
+    T = fsT/fs
+
+    if a == 0:
+        return np.sinc(tt)
+    
+    num = np.sin(np.pi*tt*(1-a)) + 4*a*tt*np.cos(np.pi*tt*(1+a))
+    den = np.pi*tt*(1-(4*a*tt)**2)
+    
+    # deal with divide-by-zeros: at zero location, place "L'Hospital value" in numerator
+    # and 1 in denominator.
+    # First divide-by-zero location is t=0; by L-Hospital, the value is (1 + a*(4/pi - 1))
+    ind_0 = np.where(np.abs(tt) < 1e-6)
+    num[ind_0] = (1 + a*(4/np.pi - 1))
+    den[ind_0] = 1
+    # Second divide-by-zero location is t=+/-T/(4*a); by L-Hospital, the value is as shown below
+    ind_0 = np.where(np.abs(np.abs(tt) - 1/(4*a)) < 1e-6)
+    num[ind_0] = a/np.sqrt(2) * ((1+2/np.pi)*np.sin(np.pi/(4*a)) + (1-2/np.pi)*np.cos(np.pi/(4*a)))
+    den[ind_0] = 1
+    
+    # scaling:
+    hh = num/den
+    
+    return hh
 
 #
 # pulse shaping
