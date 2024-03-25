@@ -32,3 +32,8 @@ To access the notebook that we used in class:
 To access the notebook that we used in class:
 * [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/050_passband.ipynb#/); use the space bar to flip through the slides, or
 * [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/050_passband.ipynb).
+
+6. **Conditional Distribution of Matchd Filter Outputs:**</br>
+To access the notebook that we used in class:
+* [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/060_conditional_pdfs.ipynb#/); use the space bar to flip through the slides, or
+* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/060_conditonal_pdfs.ipynb).
