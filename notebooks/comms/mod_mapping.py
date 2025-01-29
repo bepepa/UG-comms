@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-# File: mod_mapping.py - sources and sinks; 
+# File: mod_mapping.py - sources and sinks;
 #       mapping groups of bits to symbols; includes several constellations
 
 """
@@ -11,7 +11,7 @@ Additionally, there are some functions to pretty-print or plot a constellation.
 
 ## Constellations:
 
-The following constellations are provided:
+The following constellations are provided. Note that these constellations are **NOT** normalized to either unit energy per bit or per symbol. Use `normalize_Eb` or `normalize_Es` to produce constellations that have unit bit or symbol energy, respectively.
 * BPSK (`BPSK`)
 * QPSK (`QPSK`)
 * 16-QAM (`QAM16`)
@@ -24,46 +24,61 @@ The following constellations are provided:
 
 The following functions are used to modulate bits to symbols and vice versa
 
-* `mod_mapper( bits )`: map a sequence of bits to a sequence of symbols
-* `demodulator( rx_symbols )`: Recover bit sequence from received symbols
+* `mod_mapper( bits, mod_table )`: map a sequence of bits to a sequence of symbols
+* `demodulator( rx_symbols, mod_table )`: Recover bit sequence from received symbols
 
 ## Helpers:
 
 * `print_constellation(mod_table)`: print a table of bit patterns and symbols
 * `plot_constellation(mod_table)`: plot the constellation
+
+* `num_bits_per_symbol(mod_table)`: compute the number of bits per symbol
+* `energy_per_symbol(mod_table)`: compute the energy per symbol
+* `energy_per_bit(mod_table)`: compute the energy per bit
+* `min_dist_sq(mod_table)`: compute the square of the smallest distance between symbols
+* `energy_efficiency(mod_table)`: compute the energy efficiency of the constellation
+* `N_min(mod_table)`: compute the average number of nearest neighbors
+* `normalize_Eb`: normalize a constellation to have unit energy per bit
+* `normalize_Es`: normalize a constellation to have unit energy per symbol
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-from comms.utils import int_to_bits, bits_to_int
+from comms.utils import int_to_bits, bits_to_int, Q
 
 #
 # Constellations
 #
 # The following are from the 5G standard (TS 38.211, section 5.1)
-# the scaling factor is ommitted here
-_bpsk_map = lambda b: (1 - 2*b[0])  # different from TS 38.211 for simplicity
-_qpsk_map = lambda b: (1 - 2*b[0]) + 1j*(1 - 2*b[1])
-_16qam_map = lambda b: (1-2*b[0])*(2-(1-2*b[2])) + 1j*(1-2*b[1])*(2-(1-2*b[3]))
-_64qam_map = lambda b: (1-2*b[0])*(4-(1-2*b[2])*(2-(1-2*b[4]))) +1j*(1-2*b[1])*(4-(1-2*b[3])*(2-(1-2*b[5])))
+# the scaling factor is omitted here
+_bpsk_map = lambda b: (1 - 2 * b[0])  # different from TS 38.211 for simplicity
+_qpsk_map = lambda b: (1 - 2 * b[0]) + 1j * (1 - 2 * b[1])
+_16qam_map = lambda b: (1 - 2 * b[0]) * (2 - (1 - 2 * b[2])) + 1j * (1 - 2 * b[1]) * (
+    2 - (1 - 2 * b[3])
+)
+_64qam_map = lambda b: (1 - 2 * b[0]) * (
+    4 - (1 - 2 * b[2]) * (2 - (1 - 2 * b[4]))
+) + 1j * (1 - 2 * b[1]) * (4 - (1 - 2 * b[3]) * (2 - (1 - 2 * b[5])))
 
-# one-dimensional cnstellations derived from above
-_4pam_map = lambda b: (1-2*b[0])*(2-(1-2*b[1]))
-_8pam_map = lambda b: (1-2*b[0])*(4-(1-2*b[1])*(2-(1-2*b[2])))
+# one-dimensional constellations derived from above
+_4pam_map = lambda b: (1 - 2 * b[0]) * (2 - (1 - 2 * b[1]))
+_8pam_map = lambda b: (1 - 2 * b[0]) * (4 - (1 - 2 * b[1]) * (2 - (1 - 2 * b[2])))
 
 # 8PSK
-_8psk_map = lambda b: np.exp(1j*np.pi/8*(1-2*b[0])*(4-(1-2*b[1])*(2-(1-2*b[2]))))
+_8psk_map = lambda b: np.exp(
+    1j * np.pi / 8 * (1 - 2 * b[0]) * (4 - (1 - 2 * b[1]) * (2 - (1 - 2 * b[2])))
+)
 
 #
 # use a *comprehension* to construct the corresponding dictionaries/tables
 #
 # the dictionaries are constructed with
 # * keys equal to a sequence of K bits, represented by the corresponding decimal
-# * values eaual to the symbols
+# * values equal to the symbols
 #
 # length of the dictionary M = 2**K
- 
+
 BPSK = {n: _bpsk_map(int_to_bits(n, 1)) for n in range(2)}
 QPSK = {n: _qpsk_map(int_to_bits(n, 2)) for n in range(4)}
 QAM16 = {n: _16qam_map(int_to_bits(n, 4)) for n in range(16)}
@@ -77,12 +92,13 @@ PSK8 = {n: _8psk_map(int_to_bits(n, 3)) for n in range(8)}
 # a list of all constellations
 Constellations = [BPSK, QPSK, QAM16, QAM64, PAM4, PAM8, PSK8]
 
+
 #
 # Modulation mapper
 #
 def mod_mapper(bits, mod_table):
     """map a sequence of bits to a sequence of symbols
-    
+
     Inputs:
     -------
     * bits: sequence of 0's and 1's
@@ -92,57 +108,65 @@ def mod_mapper(bits, mod_table):
     --------
     a vector of symbols
     """
-    
-    # how many bits per symbol?
-    K = int( np.log2(len(mod_table)) )
 
-    assert len(bits) % K == 0, "number of bits must bedivisible by number of bit per symbol"
-    
+    # how many bits per symbol?
+    K = int(np.log2(len(mod_table)))
+
+    assert (
+        len(bits) % K == 0
+    ), "number of bits must be divisible by number of bit per symbol"
+
     # how many symbols will we get?
     N = len(bits) // K
     syms = np.zeros(N, dtype=complex)
-    
+
     for n in range(N):
-        key = bits_to_int(bits[K*n : K*(n+1)])
+        key = bits_to_int(bits[K * n : K * (n + 1)])
         syms[n] = mod_table[key]
-        
+
     return syms
 
-def demodulator(syms, mod_table):
+
+def demodulator(syms, mod_table, n_bits=None):
     """Recover bit sequence from received symbols
-    
+
     Inputs:
     -------
     * syms: sequence of received (noisy) symbols
     * mod_table: dictionary containing the mapping from groups of bits to symbols
+    * n_bits: number of bits to extract
 
     Returns:
     --------
     a vector of bits
     """
     # how many bits per symbol?
-    K = int( np.log2(len(mod_table)) )
-    
+    K = int(np.log2(len(mod_table)))
+
     # how many bits will we get?
     N = len(syms) * K
     bits = np.zeros(N, dtype=np.uint8)
-    
+
+    # put mod_table's symbol values and keys into a Numpy array
+    alphabet = np.array(list(mod_table.values()))
+    pattern = np.array(list(mod_table.keys()), dtype=int)
+
     # find the constellation point closest to received symb `s`
     for n in range(len(syms)):
         s = syms[n]
-        min_d = np.infty
-        min_k = -1
-        for k,v in mod_table.items():
-            dist = np.abs(s - v)
-            if dist < min_d:
-                min_d = dist
-                min_k = k
-                
+        ind = np.argmin(np.abs(alphabet - s))
+        min_k = pattern[ind]
+
         # the index of the closest symbol is integer `min_k`
         # convert that to a sequence of K bits
-        bits[n*K : (n+1)*K] = int_to_bits(min_k, K)
-        
-    return bits
+        bits[n * K : (n + 1) * K] = int_to_bits(min_k, K)
+
+    if n_bits is None:
+        return bits
+    else:
+        N = min(n_bits, len(bits))
+        return bits[:N]
+
 
 #
 # Helper functions:
@@ -151,7 +175,7 @@ def demodulator(syms, mod_table):
 #
 def print_constellation(mod_table):
     """print a table listing bit patterns and associated symbols
-    
+
     Inputs:
     -------
     * mod_table: dictionary associating bits and symbols
@@ -164,24 +188,24 @@ def print_constellation(mod_table):
     M = len(mod_table)
     K = int(np.log2(M))
 
-    print("|{:^20s}|{:^20s}|".format('Bits', 'Symbol'))
-    print("|{:^20s}|{:^20s}|".format('-'*20, '-'*20))
+    print("|{:^20s}|{:^20s}|".format("Bits", "Symbol"))
+    print("|{:^20s}|{:^20s}|".format("-" * 20, "-" * 20))
 
-    for k,v in mod_table.items():
-        bit_str = '{{:0{:d}b}}'.format(K).format(k)
-        symbol_str = '{:+4.3f}'.format(v.real)
+    for k, v in mod_table.items():
+        bit_str = "{{:0{:d}b}}".format(K).format(k)
+        symbol_str = "{:+4.3f}".format(v.real)
         if isinstance(v, complex):
-            sign_str = '+'
+            sign_str = "+"
             if v.imag < 0:
-                sign_str = '-'
-            symbol_str += ' {:s} j {:4.3f}'.format(sign_str, abs(v.imag))
+                sign_str = "-"
+            symbol_str += " {:s} j {:4.3f}".format(sign_str, abs(v.imag))
 
         print("|{:^20s}|{:^20s}|".format(bit_str, symbol_str))
 
 
 def plot_constellation(mod_table):
     """plot the constellation
-    
+
     Inputs:
     -------
     * mod_table: dictionary associating bits and symbols
@@ -194,27 +218,28 @@ def plot_constellation(mod_table):
     K = int(np.log2(M))
     max_real = max([x.real for x in mod_table.values()])
 
-    for k,v in mod_table.items():
-        bit_str = '{{:0{:d}b}}'.format(K).format(k)
+    for k, v in mod_table.items():
+        bit_str = "{{:0{:d}b}}".format(K).format(k)
 
-        plt.plot(v.real, v.imag, 'ro', label=bit_str)
-        plt.text(v.real, v.imag+0.05, bit_str, ha='center', va='bottom')
+        plt.plot(v.real, v.imag, "ro", label=bit_str)
+        plt.text(v.real, v.imag + 0.05, bit_str, ha="center", va="bottom")
 
-    plt.xlabel('Real')
-    plt.ylabel('Imag')
+    plt.xlabel("Real")
+    plt.ylabel("Imag")
 
     # make squares square and give a bit of sapce for label to fit
-    plt.axis('equal')
-    plt.xlim(-1.2*max_real, 1.2*max_real)
-    plt.ylim(-1.2*max_real, 1.2*max_real)
+    plt.axis("equal")
+    plt.xlim(-1.2 * max_real, 1.2 * max_real)
+    plt.ylim(-1.2 * max_real, 1.2 * max_real)
 
     plt.grid()
 
     # plt.show()
 
+
 def num_bits_per_symbol(mod_table):
     """Compute number of bits per symbol
-    
+
     Inputs:
     -------
     * mod_table: dictionary associating bits and symbols
@@ -223,11 +248,12 @@ def num_bits_per_symbol(mod_table):
     --------
     (int)
     """
-    return int( np.log2(len(mod_table)))
+    return int(np.log2(len(mod_table)))
+
 
 def energy_per_symbol(mod_table):
     """compute average energy per symbol
-    
+
     Inputs:
     -------
     * mod_table: dictionary associating bits and symbols
@@ -238,13 +264,14 @@ def energy_per_symbol(mod_table):
     """
     Es = 0
     for v in mod_table.values():
-        Es += np.abs(v)**2
-    
-    return Es/len(mod_table)
+        Es += np.abs(v) ** 2
+
+    return Es / len(mod_table)
+
 
 def energy_per_bit(mod_table):
     """compute average energy per bit
-    
+
     Inputs:
     -------
     * mod_table: dictionary associating bits and symbols
@@ -256,12 +283,138 @@ def energy_per_bit(mod_table):
     return energy_per_symbol(mod_table) / num_bits_per_symbol(mod_table)
 
 
+def min_dist_sq(mod_table):
+    """compute the square of the minimum distance of the constellation
+
+    Inputs:
+    -------
+    * mod_table: dictionary associating bits and symbols
+
+    Returns:
+    --------
+    (float)
+    """
+    d_min = np.infty
+
+    for n, s in mod_table.items():
+        for m, v in mod_table.items():
+            # because of symmetry, we only need to check half of all pairs
+            if m <= n:
+                continue
+
+            d = np.abs(s - v) ** 2
+            d_min = d if (d < d_min) else d_min
+
+    return d_min
+
+
+def energy_efficiency(mod_table):
+    """Energy efficiency of constellation
+
+    Inputs:
+    -------
+    * mod_table: dictionary associating bits and symbols
+
+    Returns:
+    --------
+    (float)
+    """
+
+    return min_dist_sq(mod_table) / energy_per_bit(mod_table)
+
+
+def N_min(mod_table):
+    """Compute the average number of nearest neighbors
+
+    Inputs:
+    -------
+    * mod_table: dictionary associating bits and symbols
+
+    Returns:
+    --------
+    (float)
+    """
+
+    d_min_sq = min_dist_sq(mod_table)
+
+    N_min = 0
+    for n, s in mod_table.items():
+        for m, v in mod_table.items():
+            # because of symmetry, we only need to check half of all pairs
+            if m <= n:
+                continue
+
+            d_sq = np.abs(s - v) ** 2
+            if np.abs(d_min_sq - d_sq) < 1e-8:
+                N_min += 1
+
+    # multiply by 2, since we only visited half of all pairs
+    N_min *= 2 / len(mod_table)
+
+
+def NN_Pr_symbol_error(mod_table, EbN0):
+    """compute nearest-neighbor approximation for symbol error rate"""
+
+    NN = N_min(mod_table)
+    eta = energy_efficiency(mod_table)
+
+    return Q(np.sqrt(eta / 2 * EbN0))
+
+
+def normalize_Eb(mod_table):
+    """Return a constellation that is scaled to have unit energy per bit
+
+    Input:
+    ------
+    mod_table: constellation dictionary
+
+    Returns:
+    --------
+    a dictionary with the same keys as the input constellation and values scale such that the energy per bit is equal to 1.
+
+    Example:
+    --------
+    >>> scaled_QPSK = normalize_Eb(QPSK)
+    >>> energy_per_bit(scaled_QPSK)
+    1
+    """
+    Eb = energy_per_bit(mod_table)
+    scale = 1 / np.sqrt(Eb)
+
+    return {n: scale * mod_table[n] for n in mod_table.keys()}
+
+
+def normalize_Es(mod_table):
+    """Return a constellation that is scaled to have unit energy per symbol
+
+    Input:
+    ------
+    mod_table: constellation dictionary
+
+    Returns:
+    --------
+    a dictionary with the same keys as the input constellation and values scale such that the energy per symbol is equal to 1.
+
+    Example:
+    --------
+    >>> scaled_QPSK = normalize_Es(QPSK)
+    >>> energy_per_symbol(scaled_QPSK)
+    1
+    """
+    Eb = energy_per_symbol(mod_table)
+    scale = 1 / np.sqrt(Eb)
+
+    return {n: scale * mod_table[n] for n in mod_table.keys()}
+
+
 if __name__ == "__main__":
     N = 988
+    EbN0 = 10
     bits = int_to_bits(N, 12)
     for mm in Constellations:
         K = int(np.log2(len(mm)))  # bits per symbol
-        
+        NN_Pr_symbol_error(mm, EbN0)
+
         syms = mod_mapper(bits, mm)
         rec_bits = demodulator(syms, mm)
         assert bits_to_int(rec_bits) == N
@@ -269,4 +422,4 @@ if __name__ == "__main__":
     # print_constellation(PAM8)
     # plot_constellation(QAM16)
 
-    print('Ok')
+    print("Ok")
