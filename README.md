@@ -2,38 +2,14 @@
 
 ## Notebooks for undergraduate course on digital communications
 
-1. **Modulation Mapper:**</br>
-To access the notebook that we used in class:
-* [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/010_mod_mapper.ipynb#/); use the space bar to flip through the slides, or
-* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/010_mod_mapper.ipynb)
-
-2. **Pulse Shaping:**</br>
+* **Pulse shaping:**</br>
 To access the notebook that we used in class:
 * [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/020_pulse_shaping.ipynb#/); use the space bar to flip through the slides, or
-* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/020_pulse_shaping.ipynb).
+* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/020_pulse_shaping.ipynb)
+
+2. **Our first Receiver:**</br>
+To access the notebook that we used in class:
+* [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/030_receiver_simple.ipynb#/); use the space bar to flip through the slides, or
+* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/030_receiver_simple.ipynb).
   + **Important:** to run this notebook, you will need the python code in the `comms` directory. It is best to clone/download this entire repository.
 
-3. **Spectrum of Digitally Modulated Signal:**</br>
-To access the notebook that we used in class:
-* [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/025_psd_pulses.ipynb#/); use the space bar to flip through the slides, or
-* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/025_psd_pulses.ipynb).
-
-3. **Introducing the Matched Filter:**</br>
-To access the notebook that we used in class:
-* [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/030_matched_filter.ipynb#/); use the space bar to flip through the slides, or
-* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/030_matched_filter.ipynb).
-
-4. **Nyquist Pulses:**</br>
-To access the notebook that we used in class:
-* [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/040_Nyquist_pulse.ipynb#/); use the space bar to flip through the slides, or
-* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/040_Nyquist_pulse.ipynb).
-
-5. **Baseband and Passband Signal:**</br>
-To access the notebook that we used in class:
-* [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/050_passband.ipynb#/); use the space bar to flip through the slides, or
-* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/050_passband.ipynb).
-
-6. **Conditional Distribution of Matchd Filter Outputs:**</br>
-To access the notebook that we used in class:
-* [View notebook as slides](https://nbviewer.org/format/slides/github/bepepa/UG-comms/blob/main/notebooks/060_conditional_pdfs.ipynb#/); use the space bar to flip through the slides, or
-* [Access/download the notebook](https://github.com/bepepa/UG-comms/blob/main/notebooks/060_conditonal_pdfs.ipynb).

@@ -3,7 +3,7 @@
 # File: pulse_shaping.py - pulse_shaping and matched filtering;
 #
 
-"""
+r"""
 # Pulse shaping and spectra
 
 This module contains functions related to pulse shaping and the computation of spectra
@@ -14,12 +14,15 @@ of digitally modulated signals
 * `sine_squared_pulse`: generate sine-squared pulse $p(t) = A \sin^2(\pi t/T)$ for $0 \leq t < T$
 * `rect_pulse`: generate rectangular pulse $p(t) = A$ for $0 \leq t < T$
 * `half_sine_pulse`: generate half-sine pulse $p(t) = A \sin(\pi t/T)$ for $0 \leq t < T$
+* `ramp_pulse`: synthesize a ramp-shaped (linearly increasing) pulse $p(t) = At$ for $0 \leq t < T$
+* `manchester_pulse`: synthesize a pulse that changes polarity, $p(t) = A for $0 \leq t < T/2$ and $p(t) = -A for $T/2 \leq t < T$
 * `rc_pulse`: generate a raised cosine pulse
 * `srrc_pulse`: generate a square-root raised cosine pulse
 
 ## Pulse shaping
 
-* `pulse_shape`: function perform upsampling by factor `fsT` followed by filtering with specified pulse
+* `pulse_shape`: function perform up-sampling by factor `fsT` followed by filtering with specified pulse
+* `matched_filter`: matched filter received signal with given pulse
 
 ## Bandwidth computation
 
@@ -89,8 +92,44 @@ def half_sine_pulse(fsT):
     return pp
 
 
+def ramp_pulse(fsT):
+    """synthesize a ramp-shaped (linearly increasing) pulse
+
+    Inputs:
+    -------
+    fsT: samples per symbol period
+
+    Returns:
+    --------
+    pulse of length fsT samples
+    """
+    nn = np.arange(fsT)
+    pp = np.sqrt(6 / ((fsT - 1) * fsT * (2 * fsT - 1))) * nn
+
+    return pp
+
+
+def manchester_pulse(fsT):
+    """synthesize a pulse that changes polarity in the middle of the pulse
+
+    Inputs:
+    -------
+    fsT: samples per symbol period
+
+    Returns:
+    --------
+    pulse of length fsT samples
+    """
+    pp = np.ones(fsT)
+    pp[-fsT // 2 :] = -1.0
+    if fsT & 0x1:
+        pp[fsT // 2] = 0
+
+    return pp / np.sqrt(np.sum(pp**2))
+
+
 def rc_pulse(a, fsT, N=5):
-    """Construct a raised cosine pulse
+    r"""Construct a raised cosine pulse
 
     Inputs:
     -------
@@ -123,7 +162,7 @@ def rc_pulse(a, fsT, N=5):
 
 
 def srrc_pulse(a, fsT, N=5):
-    """Construct a raised cosine pulse
+    r"""Construct a raised cosine pulse
 
     Inputs:
     a: roll-off factor
@@ -189,6 +228,37 @@ def pulse_shape(syms, pp, fsT):
 
     # convolve with pulse
     return np.convolve(dd, pp)
+
+
+#
+# matched filter
+#
+def matched_filter(sig, pulse, fsT, do_sub_sample=True):
+    """matched filter received signal with given pulse
+
+    Inputs:
+    -------
+    `sig`: samples of the received signal
+    `pulse`: transmit pulse; assumed to be unit energy
+    `fsT`: oversampling factor
+    `do_sub_sample`: if True, sub-sampling is performed and only the symbol estimates are output; otherwise the entire matched filter output is computed (default: True)
+
+    Returns:
+    --------
+    vector representing either the symbol estimates or the matched filter output signal
+    """
+    # time-reverse the pulse
+    h_MF = np.flip(pulse)
+
+    # compute output of the matched filter
+    z = np.convolve(sig, h_MF)
+
+    # sub-sample, if needed
+    if do_sub_sample:
+        delay = len(pulse) - 1
+        z = z[delay::fsT]
+
+    return z
 
 
 #
