@@ -203,7 +203,7 @@ def print_constellation(mod_table):
         print("|{:^20s}|{:^20s}|".format(bit_str, symbol_str))
 
 
-def plot_constellation(mod_table):
+def plot_constellation(mod_table, do_show_bits=True):
     """plot the constellation
 
     Inputs:
@@ -222,7 +222,8 @@ def plot_constellation(mod_table):
         bit_str = "{{:0{:d}b}}".format(K).format(k)
 
         plt.plot(v.real, v.imag, "ro", label=bit_str)
-        plt.text(v.real, v.imag + 0.05, bit_str, ha="center", va="bottom")
+        if do_show_bits:
+            plt.text(v.real, v.imag + 0.05, bit_str, ha="center", va="bottom")
 
     plt.xlabel("Real")
     plt.ylabel("Imag")
