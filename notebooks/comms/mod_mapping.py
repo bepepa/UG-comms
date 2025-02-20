@@ -52,22 +52,22 @@ from comms.utils import int_to_bits, bits_to_int, Q
 #
 # The following are from the 5G standard (TS 38.211, section 5.1)
 # the scaling factor is omitted here
-_bpsk_map = lambda b: (1 - 2 * b[0])  # different from TS 38.211 for simplicity
-_qpsk_map = lambda b: (1 - 2 * b[0]) + 1j * (1 - 2 * b[1])
-_16qam_map = lambda b: (1 - 2 * b[0]) * (2 - (1 - 2 * b[2])) + 1j * (1 - 2 * b[1]) * (
-    2 - (1 - 2 * b[3])
-)
-_64qam_map = lambda b: (1 - 2 * b[0]) * (
-    4 - (1 - 2 * b[2]) * (2 - (1 - 2 * b[4]))
-) + 1j * (1 - 2 * b[1]) * (4 - (1 - 2 * b[3]) * (2 - (1 - 2 * b[5])))
+_bpsk_map = lambda b: (1.0 - 2 * b[0])  # different from TS 38.211 for simplicity
+_qpsk_map = lambda b: (1.0 - 2 * b[0]) + 1j * (1.0 - 2 * b[1])
+_16qam_map = lambda b: (1.0 - 2 * b[0]) * (2 - (1.0 - 2 * b[2])) + 1j * (
+    1.0 - 2 * b[1]
+) * (2 - (1.0 - 2 * b[3]))
+_64qam_map = lambda b: (1.0 - 2 * b[0]) * (
+    4 - (1.0 - 2 * b[2]) * (2 - (1.0 - 2 * b[4]))
+) + 1j * (1.0 - 2 * b[1]) * (4 - (1.0 - 2 * b[3]) * (2 - (1.0 - 2 * b[5])))
 
 # one-dimensional constellations derived from above
-_4pam_map = lambda b: (1 - 2 * b[0]) * (2 - (1 - 2 * b[1]))
-_8pam_map = lambda b: (1 - 2 * b[0]) * (4 - (1 - 2 * b[1]) * (2 - (1 - 2 * b[2])))
+_4pam_map = lambda b: (1.0 - 2 * b[0]) * (2 - (1.0 - 2 * b[1]))
+_8pam_map = lambda b: (1.0 - 2 * b[0]) * (4 - (1.0 - 2 * b[1]) * (2 - (1.0 - 2 * b[2])))
 
 # 8PSK
 _8psk_map = lambda b: np.exp(
-    1j * np.pi / 8 * (1 - 2 * b[0]) * (4 - (1 - 2 * b[1]) * (2 - (1 - 2 * b[2])))
+    1j * np.pi / 8 * (1.0 - 2 * b[0]) * (4 - (1.0 - 2 * b[1]) * (2 - (1.0 - 2 * b[2])))
 )
 
 #
